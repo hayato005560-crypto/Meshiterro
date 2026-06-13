@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-
+  before_action :is_matching_login_user, only: [:edit, :update]
   allow_unauthenticated_access only: [:new, :create] 
  
   def new
@@ -14,11 +14,32 @@ class UsersController < ApplicationController
       render :new, status: :unprocessable_entity
     end
   end
+
+  def show
+    @user = User.find(params[:id])
+    @post_images = @user.post_images.page(params[:page])
+  end
+
+  def edit
+    @user = User.find(params[:id])
+  end
+  
+  def update
+    @user = User.find(params[:id])
+    @user.update(user_params)
+    redirect_to user_path(@user.id)
+  end
  
   private
  
   def user_params
-    # name, email_address, password, password_confirmation を許可
-    params.require(:user).permit(:name, :email_address, :password, :password_confirmation)
+    params.require(:user).permit(:name, :email_address, :password, :password_confirmation, :profile_image)
   end
+
+   def is_matching_login_user
+    user = User.find(params[:id])
+    unless user.id == Current.user.id
+      redirect_to post_images_path
+    end
+  end 
 end
